@@ -7,20 +7,15 @@ export default class Player {
     this.currentScore = currentScore;
   }
 
-  applyRoundScore({ mode, rank, heoDo, heoDen }) {
-    const baseScores = {
-      "1-2": { 1: 2, 2: 1, 3: -1, 4: -2 },
-      "2-4": { 1: 4, 2: 2, 3: -2, 4: -4 },
-    };
+  applyRoundScore({ rankPoints, rank, heos, heoPoints }) {
+    const scoreRank = Number(rankPoints?.[rank]);
+    let score = Number.isFinite(scoreRank) ? scoreRank : 0;
 
-    const scoreRank = baseScores[mode][rank];
-
-    // Mặc định nếu không có dữ liệu heo
-    heoDo = heoDo || 0;
-    heoDen = heoDen || 0;
-
-    // Quy tắc tính điểm heo, heo đỏ 2 điểm, ăn thì trừ 2, thua thì trừ 1
-    const score = scoreRank + heoDo * 2 + heoDen * 1;
+    for (const suit of ["co", "ro", "chuon", "bich"]) {
+      const count = Number(heos?.[suit]) || 0;
+      const value = Number(heoPoints?.[suit]);
+      score += count * (Number.isFinite(value) ? value : 0);
+    }
 
     this.currentScore += score;
     this.lastRank = rank;

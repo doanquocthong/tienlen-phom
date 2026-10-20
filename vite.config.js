@@ -6,7 +6,9 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: true,
-    port: 5173
+    port: 5173,
+    // true = chấp nhận mọi Host, kể cả domain ngrok
+    allowedHosts: true
   }
 })
 

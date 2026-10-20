@@ -1,15 +1,16 @@
 import React, { useState } from "react";
 import "../App.css";
+import Avatar from "./Avatar";
+import { HEO_SUITS, emptyHeos, formatPoint, pointClass } from "../storage/tienlenSession";
+import { HeoPointSummary, RankSummary } from "./PointSummary";
 
-export default function RoundResultModal({ players, onClose, onSubmit }) {
-  const [mode, setMode] = useState("1-2");
-
+export default function RoundResultModal({ players, rules, heo, onClose, onSubmit }) {
+  const [error, setError] = useState("");
   const [results, setResults] = useState(
     players.reduce((acc, p) => {
       acc[p.id] = {
         rank: null,
-        heoDo: 0,
-        heoDen: 0,
+        heos: emptyHeos(),
       };
       return acc;
     }, {})
@@ -29,7 +30,7 @@ export default function RoundResultModal({ players, onClose, onSubmit }) {
         <button type="button" onClick={decrease}>
           –
         </button>
-        <span>{value}</span>
+        <span className={pointClass(value)}>{value}</span>
         <button type="button" onClick={increase}>
           +
         </button>
@@ -44,6 +45,7 @@ export default function RoundResultModal({ players, onClose, onSubmit }) {
   const updateField = (id, field, value) => {
     // ép kiểu number cho chắc chắn
     const numericValue = typeof value === "number" ? value : Number(value);
+    setError("");
     setResults((prev) => ({
       ...prev,
       [id]: {
@@ -54,6 +56,7 @@ export default function RoundResultModal({ players, onClose, onSubmit }) {
   };
 
   const chooseRank = (playerId, rank) => {
+    setError("");
     const currentRank = results[playerId].rank;
     if (currentRank === rank) {
       updateField(playerId, "rank", null);
@@ -64,32 +67,35 @@ export default function RoundResultModal({ players, onClose, onSubmit }) {
   };
 
 
+  const updateHeo = (id, suit, value) => {
+    setError("");
+    setResults((prev) => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        heos: { ...prev[id].heos, [suit]: value },
+      },
+    }));
+  };
+
 const submit = () => {
-  // Tính tổng heo đỏ và heo đen
-  let totalHeoDo = 0;
-  let totalHeoDen = 0;
+  const unbalanced = HEO_SUITS.filter((suit) => {
+    const total = Object.values(results).reduce(
+      (sum, row) => sum + (Number(row.heos?.[suit.id]) || 0),
+      0
+    );
+    return total !== 0;
+  });
 
-  for (const playerId in results) {
-    const r = results[playerId];
-    totalHeoDo += Number(r.heoDo) || 0;
-    totalHeoDen += Number(r.heoDen) || 0;
+  if (unbalanced.length) {
+    setError(`${unbalanced.map((suit) => suit.label).join(", ")} của bốn người phải cộng lại bằng 0.`);
+    return;
   }
 
-  // Kiểm tra cân bằng heo đỏ và heo đen
-  if (totalHeoDo !== 0) {
-    alert("Ông tính heo kiểu đéo gì đấy???");
-    return; // dừng submit
-  }
-
-  if (totalHeoDen !== 0) {
-    alert("Ông tính heo kiểu đéo gì đấy???");
-    return; // dừng submit
-  }
-  
   const allRanked = Object.values(results).every(r => r.rank !== null);
 
   if (!allRanked) {
-    alert("Ông nhập có thiếu thằng nào không???");
+    setError("Chọn đủ hạng nhất, nhì, ba và chót.");
     return;
   }
 
@@ -97,86 +103,65 @@ const submit = () => {
 
 
   // Nếu đúng thì gửi dữ liệu
-  onSubmit({ mode, results });
+  onSubmit({ results });
   onClose();
 };
 
   return (
     <div className="modal-overlay">
-      <div className="modal-box">
+      <div className="modal-box result-modal">
         <h2 className="modal-title">Kết quả ván đấu</h2>
+        <p className="rule-summary"><RankSummary rules={rules} /></p>
+        <p className="rule-summary"><HeoPointSummary heo={heo} /></p>
 
-        {/* Mode */}
-        <div className="mode-select">
-          <label className="radio-option">
-            <input
-              type="radio"
-              checked={mode === "1-2"}
-              onChange={() => setMode("1-2")}
-            />
-            <span>Điểm 1 – 2</span>
-          </label>
-
-          <label className="radio-option">
-            <input
-              type="radio"
-              checked={mode === "2-4"}
-              onChange={() => setMode("2-4")}
-            />
-            <span>Điểm 2 – 4</span>
-          </label>
-        </div>
-
-        {/* Danh sách người chơi */}
-        <div className="player-result-list">
+        <div className="result-grid">
           {players.map((p) => (
-            <div key={p.id} className="player-result-row">
-              <div className="player-name">{p.name}</div>
-              {/* Rank selection */}
-              <div className="rank-box">
+            <article key={p.id} className="result-card">
+              <div className="result-head">
+                <Avatar name={p.name} src={p.avatar} size={36} />
+                <span>{p.name}</span>
+              </div>
+
+              <div className="result-ranks">
                 {[1, 2, 3, 4].map((r) => {
                   const isMine = results[p.id].rank === r;
                   const isTaken = takenRanks.includes(r) && !isMine;
                   return (
-                    <div
+                    <button
                       key={r}
-                      className={`rank-item 
-                        ${isMine ? "rank-selected" : ""} 
-                        ${isTaken ? "rank-disabled" : ""}`}
+                      type="button"
+                      className={`rank-item tone-${r} ${isMine ? "rank-selected" : ""} ${isTaken ? "rank-disabled" : ""}`}
                       onClick={() => {
                         if (!isTaken || isMine) chooseRank(p.id, r);
                       }}
                     >
                       {r}
-                    </div>
+                    </button>
                   );
                 })}
               </div>
 
-              {/* Heo đỏ */}
-              <div className="heo-box">
-                <label style={{color : "red", fontWeight: "bold"}}>Heo đỏ</label>
-                <NumberStepper
-                  value={results[p.id].heoDo}
-                  min={-10}
-                  max={10}
-                  onChange={(val) => updateField(p.id, "heoDo", val)}
-                />
+              <div className="result-heos">
+                {HEO_SUITS.map((suit) => (
+                  <div key={suit.id} className={`heo-field suit-${suit.id}`}>
+                    <span>
+                      {suit.symbol} {suit.short}{" "}
+                      <span className={pointClass(heo?.[suit.id])}>{formatPoint(heo?.[suit.id])}</span>
+                    </span>
+                    <NumberStepper
+                      value={results[p.id].heos[suit.id]}
+                      min={-10}
+                      max={10}
+                      onChange={(val) => updateHeo(p.id, suit.id, val)}
+                    />
+                  </div>
+                ))}
               </div>
-              {/* Heo đen */}
-              <div className="heo-box">
-                <label style={{color : "black", fontWeight: "bold"}}>Heo đen</label>
-                <NumberStepper
-                  value={results[p.id].heoDen}
-                  min={-10}
-                  max={10}
-                  onChange={(val) => updateField(p.id, "heoDen", val)}
-                />
-              </div>
-            </div>
+            </article>
           ))}
         </div>
 
+        {error && <p className="setup-error">{error}</p>}
         <div className="btn-row">
           <button onClick={onClose} className="cancel-btn">
             Hủy

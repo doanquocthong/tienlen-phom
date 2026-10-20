@@ -1,70 +1,35 @@
-export default function PlayerCardDetail({ player, selected, onSelect }) {
+import Avatar from "./Avatar";
+import { RANK_LABELS, pointClass } from "../storage/tienlenSession";
+
+export default function PlayerCardDetail({ player, place = 0 }) {
+  const lastRank =
+    typeof player.lastRank === "number" && player.lastRank > 0 ? player.lastRank : 0;
+  const score =
+    typeof player.currentScore === "number" && !Number.isNaN(player.currentScore)
+      ? player.currentScore
+      : 0;
+  const tone = place ? `tone-${place}` : "tone-none";
+
   return (
-    <div
-      className={`player-box-detail ${selected ? "selected" : ""}`}
-      onClick={onSelect}
-    >
-      {/* Avatar */}
-      <img
-        src={player.avatar}
-        alt={player.name}
-        style={{
-          width: "40px",
-          height: "40px",
-          borderRadius: "50%",
-          objectFit: "cover",
-          marginRight: "16px",
-        }}
-      />
+    <div className={`player-box-detail ${tone}`}>
+      <span className="rank-badge">{place ? RANK_LABELS[place] : "Hòa"}</span>
+      <Avatar name={player.name} src={player.avatar} size={44} />
 
-      {/* Info */}
-      <div style={{ display: "flex", flexDirection: "column", flexGrow: 1 }}>
-        <div
-          style={{
-            fontSize: "14px",
-            fontWeight: "bold",
-            color: "Gray",
-            marginBottom: "6px",
-          }}
-        >
-          {player.name}
-        </div>
-
-        {/* Hàng chứa thứ hạng và điểm nằm ngang */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "space-between",
-            fontSize: "12px",
-            fontWeight: "600",
-            color: "white",
-          }}
-        >
-          <div>
-            <span style={{ fontWeight: "bold" }}>Thứ hạng trước đó: </span>
-            {typeof player.lastRank === "number" && !isNaN(player.lastRank)
-              ? player.lastRank
-              : "-"}
-          </div>
-
-          <div>
-            <span style={{ fontWeight: "bold" }}>Điểm hiện tại: </span>
-            <span
-              style={{
-                color: "#56c725",
-                fontWeight: 500,
-                fontSize: "16px",
-              }}
-            >
-              {typeof player.currentScore === "number" &&
-              !isNaN(player.currentScore)
-                ? player.currentScore
-                : 0}
-            </span>
-          </div>
+      <div className="detail-copy">
+        <div className="detail-name">{player.name}</div>
+        <div className="detail-meta">
+          <span>
+            Hạng trước:{" "}
+            {lastRank ? (
+              <span className={`tone-text tone-${lastRank}`}>{RANK_LABELS[lastRank]}</span>
+            ) : (
+              "—"
+            )}
+          </span>
         </div>
       </div>
+
+      <strong className={`detail-score ${pointClass(score)}`}>{score}</strong>
     </div>
   );
 }

@@ -1,0 +1,9 @@
+{
+  "name": "Tính điểm tiến lên",
+  "short_name": "Tiến lên",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#16351c",
+  "theme_color": "#16351c"
+}

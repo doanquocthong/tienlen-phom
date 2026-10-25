@@ -2,7 +2,15 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import PlayerCardDetail from "../components/PlayerCardDetail";
 import PlayerSetup from "../components/PlayerSetup";
 import ScoreRuleSetup from "../components/ScoreRuleSetup";
-import RoundResultModal from "../components/RoundResultModal";
+import RoundEntryCard, {
+  EntryHint,
+  RoundCutList,
+  emptyEntry,
+  entryView,
+  resultsFromEntry,
+  tapPlayer,
+  tapSuit,
+} from "../components/RoundEntry";
 import tableImg from "../assets/images/table.jpg";
 import Player from "../models/Player";
 import Congratulation from "../components/Congratulation";
@@ -74,7 +82,7 @@ function applyRound(current, results) {
 
 function TienLenScreen({ goHome }) {
   const [session, setSession] = useState(() => loadTienLenSession() ?? createEmptySession());
-  const [showRoundModal, setShowRoundModal] = useState(false);
+  const [entry, setEntry] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
   const [winners, setWinners] = useState(null);
   const [ruleError, setRuleError] = useState("");
@@ -157,7 +165,7 @@ function TienLenScreen({ goHome }) {
     const next = applyRound(session, results);
     const after = Math.max(...next.players.map((player) => player.currentScore));
     setSession(next);
-    setShowRoundModal(false);
+    setEntry(null);
     if (session.goal && before < session.goal && after >= session.goal) {
       playCelebration();
       setWinners(leadersOf(next.players));
@@ -189,7 +197,7 @@ function TienLenScreen({ goHome }) {
     if (!window.confirm("Xóa điểm và người chơi của ván này?")) return;
     clearTienLenSession();
     setSession(createEmptySession());
-    setShowRoundModal(false);
+    setEntry(null);
     setShowHistory(false);
     setWinners(null);
     setRuleError("");
@@ -288,6 +296,19 @@ function TienLenScreen({ goHome }) {
                 </div>
               </div>
             ) : null}
+            {entry && <EntryHint entry={entry} players={session.players} />}
+            {entry && (
+              <RoundCutList
+                cuts={entry.cuts}
+                players={session.players}
+                onRemove={(id) => {
+                  setEntry((current) => current && ({
+                    ...current,
+                    cuts: current.cuts.filter((cut) => cut.id !== id),
+                  }));
+                }}
+              />
+            )}
             {rows.map(({ player, place }) => (
               <div
                 key={player.id}
@@ -297,44 +318,75 @@ function TienLenScreen({ goHome }) {
                   else rowRefs.current.delete(player.id);
                 }}
               >
-                <PlayerCardDetail player={player} place={place} />
+                {entry ? (
+                  <RoundEntryCard
+                    player={player}
+                    {...entryView(player, entry, session.rules, session.heo)}
+                    onTapPlayer={(id) => setEntry((current) => current && tapPlayer(current, id))}
+                    onTapSuit={(id, suitId) => setEntry((current) => current && tapSuit(current, id, suitId))}
+                  />
+                ) : (
+                  <PlayerCardDetail player={player} place={place} />
+                )}
               </div>
             ))}
           </div>
 
           <div className="action-bar">
-            <div className="action-secondary">
-              <button
-                type="button"
-                disabled={!session.history?.length}
-                onClick={undoLastRound}
-              >
-                Hoàn tác
-              </button>
-              <button type="button" onClick={() => setShowHistory(true)}>
-                Nhật ký{session.history?.length ? ` (${session.history.length})` : ""}
-              </button>
-            </div>
-            <div className="action-primary">
-              <button type="button" onClick={() => setShowRoundModal(true)}>
-                Nhập kết quả
-              </button>
-              <button type="button" className="summary-btn" onClick={showSummaryWinner}>
-                Tổng kết
-              </button>
-            </div>
+            {entry ? (
+              <>
+                <div className="action-secondary">
+                  <button type="button" onClick={() => setEntry(null)}>
+                    Hủy
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!entry.order.length && !entry.cuts.length && !entry.pending}
+                    onClick={() => setEntry(emptyEntry())}
+                  >
+                    Làm lại
+                  </button>
+                </div>
+                <div className="action-primary">
+                  <button
+                    type="button"
+                    className="summary-btn"
+                    disabled={!resultsFromEntry(session.players, entry)}
+                    onClick={() => {
+                      const results = resultsFromEntry(session.players, entry);
+                      if (results) handleRoundResult({ results });
+                    }}
+                  >
+                    Chốt ván
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="action-secondary">
+                  <button
+                    type="button"
+                    disabled={!session.history?.length}
+                    onClick={undoLastRound}
+                  >
+                    Hoàn tác
+                  </button>
+                  <button type="button" onClick={() => setShowHistory(true)}>
+                    Nhật ký{session.history?.length ? ` (${session.history.length})` : ""}
+                  </button>
+                </div>
+                <div className="action-primary">
+                  <button type="button" onClick={() => setEntry(emptyEntry())}>
+                    Nhập ván
+                  </button>
+                  <button type="button" className="summary-btn" onClick={showSummaryWinner}>
+                    Tổng kết
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </>
-      )}
-
-      {showRoundModal && (
-        <RoundResultModal
-          players={session.players}
-          rules={session.rules}
-          heo={session.heo}
-          onClose={() => setShowRoundModal(false)}
-          onSubmit={handleRoundResult}
-        />
       )}
 
       {showHistory && (

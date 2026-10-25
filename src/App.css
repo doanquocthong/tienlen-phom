@@ -1134,6 +1134,158 @@
   line-height: 1;
 }
 
+.entry-hint {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  text-align: center;
+  color: white;
+  font-size: clamp(13px, 3.6vw, 15px);
+  font-weight: 700;
+  text-shadow: 0 1px 2px black;
+}
+
+.entry-note {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.cut-list {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.cut-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.72);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.cut-chip span:first-child,
+.cut-chip span:nth-child(3) {
+  max-width: 6.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.entry-card {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 8px;
+}
+
+.entry-card.is-winner {
+  outline: 2px solid #ffd54a;
+  outline-offset: 1px;
+}
+
+.entry-card.is-target {
+  outline: 2px dashed rgba(255, 255, 255, 0.85);
+  outline-offset: 1px;
+}
+
+.entry-rank {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 2px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.entry-rank:hover,
+.entry-rank:focus-visible {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.entry-lose,
+.entry-eat {
+  color: #ffd54a;
+}
+
+.entry-suits {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.suit-pick {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 40px;
+  padding: 0 4px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.suit-times {
+  color: #f4f7ef;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.suit-pick.is-loss .suit-times {
+  color: #ffb4b4;
+}
+
+.suit-pick.suit-co,
+.suit-pick.suit-ro {
+  color: #ff5c5c;
+  border-color: rgba(255, 92, 92, 0.55);
+}
+
+.suit-pick.suit-chuon,
+.suit-pick.suit-bich {
+  color: #f2f2f2;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.suit-pick.is-pending {
+  background: rgba(255, 213, 74, 0.28);
+  border-color: #ffd54a;
+}
+
+.suit-pick:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.suit-pick:disabled:has(.suit-times) {
+  opacity: 0.9;
+}
+
+.action-bar button:disabled {
+  opacity: 0.4;
+}
+
 .goal-meter {
   grid-column: 1 / -1;
   display: grid;

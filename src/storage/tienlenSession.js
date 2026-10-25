@@ -83,6 +83,7 @@ export function createEmptySession() {
     heo: { ...DEFAULT_HEO },
     goal: "",
     history: [],
+    redo: [],
   };
 }
 
@@ -185,6 +186,7 @@ export function loadTienLenSession() {
       heo,
       goal: playing ? (goal === "" ? null : Number(goal)) : goal,
       history: cleanHistory(data.history),
+      redo: cleanHistory(data.redo),
     };
   } catch {
     return null;

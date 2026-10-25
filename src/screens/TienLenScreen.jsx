@@ -77,7 +77,18 @@ function applyRound(current, results) {
     ...current,
     players,
     history: [...(current.history || []), { lines }],
+    redo: [],
   };
+}
+
+function withRound(players, round, forward) {
+  return players.map((player) => {
+    const line = round.lines.find((item) => item.playerId === player.id);
+    if (!line) return player;
+    return forward
+      ? { ...player, currentScore: line.scoreBefore + line.delta, lastRank: line.rank }
+      : { ...player, currentScore: line.scoreBefore, lastRank: line.lastRankBefore };
+  });
 }
 
 function TienLenScreen({ goHome }) {
@@ -177,20 +188,28 @@ function TienLenScreen({ goHome }) {
       const history = current.history || [];
       const last = history[history.length - 1];
       if (!last) return current;
-
-      const players = current.players.map((player) => {
-        const line = last.lines.find((item) => item.playerId === player.id);
-        if (!line) return player;
-        return {
-          ...player,
-          currentScore: line.scoreBefore,
-          lastRank: line.lastRankBefore,
-        };
-      });
-
-      return { ...current, players, history: history.slice(0, -1) };
+      return {
+        ...current,
+        players: withRound(current.players, last, false),
+        history: history.slice(0, -1),
+        redo: [...(current.redo || []), last],
+      };
     });
     setWinners(null);
+  };
+
+  const redoLastRound = () => {
+    setSession((current) => {
+      const redo = current.redo || [];
+      const nextRound = redo[redo.length - 1];
+      if (!nextRound) return current;
+      return {
+        ...current,
+        players: withRound(current.players, nextRound, true),
+        history: [...(current.history || []), nextRound],
+        redo: redo.slice(0, -1),
+      };
+    });
   };
 
   const resetSession = () => {
@@ -370,6 +389,13 @@ function TienLenScreen({ goHome }) {
                     onClick={undoLastRound}
                   >
                     Hoàn tác
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!session.redo?.length}
+                    onClick={redoLastRound}
+                  >
+                    Làm lại
                   </button>
                   <button type="button" onClick={() => setShowHistory(true)}>
                     Nhật ký{session.history?.length ? ` (${session.history.length})` : ""}
